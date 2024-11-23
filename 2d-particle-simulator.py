@@ -1,29 +1,17 @@
 import pygame
-import random
+import time
 
 pygame.init()
 
-width, height = 500, 500
+width, height = 1300, 700
 screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption("Particle")
 
 black = (0, 0, 0)
 white = (255, 255, 255)
-red = (255, 0, 0)
 
-# A class to act as a blue print for our particles
 class PARTICLE(object):
-  """
-  x : The x position of the particle
-  y : The y position of the particle
-  vx : The x velocity of the particle in ms^-1
-  vy : The y velocity of the particle in ms^-1
-  mass : The mass of the particle in kg
-  radius : The radius of the particle in m
-  """
-  def __init__(self, x, y, vx, vy, mass, radius, ifx=0, ify=0):
-
-    # Applying our needed variables for each particle
+  def __init__(self, x, y, vx, vy, mass, radius):
     self.x = x
     self.y = y
     self.vx = vx
@@ -31,157 +19,131 @@ class PARTICLE(object):
     self.mass = mass
     self.radius = radius
 
-    self.ifx = ifx
-    self.ify = ify
-
-    """
-    self.lastPositionCount = 100
-    self.lastPositionPointer = 0
-    self.lastPositions = ["."]*self.lastPositionCount
-    """
-    self.forceApplied = False  
-
-  """
-  To aquire the new position of the particle we can just use the velocity equation: v = s/t
-  We can rearrange this equation for displacement: s = v * t
-  Now we can add this displacement to the original position of the particle to get our new position
-  """
-
   def UpdatePosition(self, dt):
-
-    """
-    self.lastPositions[self.lastPositionPointer % self.lastPositionCount] = [self.x, self.y]
-    self.lastPositionPointer += 1
-    """
-
-    # Updating position by adding displacement
     self.x += self.vx * dt
     self.y += self.vy * dt
 
-  """
-  To update the velocity of the particle we need to use Newton's second law of motion: F = ma
-  We can rearrange this equation for acceleration (a): a = F/m
-  Since acceleration is v/t, we can find the new velocity by multiplying acceleration by time: v_new = a * dt
-  """
-
-  def UpdateVelocity(self, dt, other, mouse):
-
-    if not self.forceApplied:
-      
-      ax = self.ifx / self.mass
-      ay = self.ify / self.mass
-
-      self.vx += ax * dt
-      self.vy += ay * dt 
-
-      self.forceApplied = True
+  def UpdateVelocity(self, dt, other):
 
     XFORCES = []
     YFORCES = []
 
-    # gravity of other particles
-    ox, oy, om = other.x, other.y, other.mass
-
-    if mouse:
-      ox, oy = pygame.mouse.get_pos()
-      om = 10
-
-    r = ((self.x - ox)**2 + (self.y - oy)**2)**0.5
+    r = ((self.x - other.x)**2 + (self.y - other.y)**2)**0.5
     if r == 0:
       r = 1e-1
     G = 10
     epsilon = 3
-    F = G * (self.mass * om) / (r**2 + epsilon**2)
-    F_x = F * ((ox - self.x)/r)
-    F_y = F * ((oy - self.y)/r)
+    F = G * (self.mass * other.mass) / (r**2 + epsilon**2)
+    F_x = F * ((other.x - self.x)/r)
+    F_y = F * ((other.y - self.y)/r)
     XFORCES.append(F_x)
     YFORCES.append(F_y)
 
+    """
     # Air drag
     dragCoefficient = 0.01
     F_dragx = -dragCoefficient * self.vx
     F_dragy = -dragCoefficient * self.vy
-    #XFORCES.append(F_dragx)
-    #YFORCES.append(F_dragy)
+    XFORCES.append(F_dragx)
+    YFORCES.append(F_dragy)
+    """
 
-    F_totalx = sum(XFORCES)
-    F_totaly = sum(YFORCES)
+    F_xtotal = sum(XFORCES)
+    F_ytotal = sum(YFORCES)
 
-    ax = F_totalx/self.mass
-    ay = F_totaly/self.mass
+    ax = F_xtotal/self.mass
+    ay = F_ytotal/self.mass
 
-    # Adding calculated velocities to the original
     self.vx += ax * dt
     self.vy += ay * dt 
 
-  """
-  We want to check if the particle has collided with a wall
-  To do this we can get the position of the particles and check if they are out of the boundries (collided with a wall)
-  We will assume that we have a perfectly elastic wall (there is no loss in the velocity due to friction)
-  To achieve this bouce we can just invert the velocity that is perpendicular to the wall
-
-      For a verticle wall (e.g. x = 0) the x velocity will be inverted: (vx', vy') = (-vx, vy)
-
-      For a horizontal wall (e.g. y = 0) the y velocity will be inverted: (vx', vy') = (vx, -vy)
-  """
-
   def CheckBoundary(self, xr, xl, yu, yd):
-
-    # Checking if the borders are not valid (xl > xr & yd > yu)
     if xl > xr or yd > yu:
       return "Not valid boundaries"
 
-    # Cheking if the positions of the particle go past the borders
     if self.x > xr or self.x < xl:
       self.vx = -self.vx 
     if self.y > yu or self.y < yd:
       self.vy = -self.vy 
 
-  """
-  def GetLastPositions(self):
-    return self.lastPositions
-  """
-
   def GetData(self):
-    
-    # Returning data about the particle for debugging
-    return f"Particle is at ({self.x},{self.y}) moving with a velocity of ({self.vx},{self.vy})"
+    sf = 2
+    return f"Particle is at ({round(self.x, sf)}, {round(self.y, sf)}) moving with a velocity of ({round(self.vx, sf)}, {round(self.vy, sf)})"
 
-def UpdateParticle(particle, dt, fx, fy, other, mouse=False):
-
+def UpdateParticle(particle, dt, other):
   particle.CheckBoundary(width,0,height,0)
   particle.UpdatePosition(dt)
-  particle.UpdateVelocity(dt, other, mouse)
+  particle.UpdateVelocity(dt, other)
 
 particleList = []
-num = 1
-speed = 500
-
-for i in range(num):
-  particleList.append(PARTICLE(random.randint(50, width-50), random.randint(50, height-50), 0, 0, 5, 1))
-  #particleList.append(PARTICLE(random.randint(50, width-50), height//2, 0, 0, 1, 1, 0, 0))
+click = False
 
 running = True
+
+dt = 0.01
+dtSave = dt
+frozen = False
+
 while running:
   for event in pygame.event.get():
     if event.type == pygame.QUIT:
       running = False
 
+    if event.type == pygame.MOUSEBUTTONDOWN:
+      click = True
+
+    if event.type == pygame.KEYDOWN:
+      if not frozen:
+        if event.key == pygame.K_q and dt > 0:
+          dt -= 0.01
+          dtSave = dt
+        if event.key == pygame.K_e :
+          dt += 0.01
+          dtSave = dt
+      
+      if event.key == pygame.K_w:
+        frozen = not frozen
+
+        if frozen:
+          dt = 0
+        else:
+          dt = dtSave
+
   screen.fill(black)
+
+  font = pygame.font.Font('freesansbold.ttf', 15)
+
+  text = font.render(f"dt: {round(dt,3)}", True, white)
+  textRect = text.get_rect()
+  textRect.topright = (width, 0)
+  screen.blit(text, textRect)
+
+  controls1 = font.render(f"Q&E: Increase/Decrease dt", True, white)
+  controls1Rect = controls1.get_rect()
+  controls1Rect.bottomleft = (0, height-20)
+  screen.blit(controls1, controls1Rect)
+  controls2 = font.render(f"W: Pause/Play dt", True, white)
+  controls2Rect = controls1.get_rect()
+  controls2Rect.bottomleft = (0, height)
+  screen.blit(controls2, controls2Rect)
+
+  
+  if click:
+    click = False
+    mx, my = pygame.mouse.get_pos()
+    particleList.append(PARTICLE(mx, my, 0, 0, 5, 1))
 
   for i, particle in enumerate(particleList):
     for j, otherParticle in enumerate(particleList):
       if i != j:
-        UpdateParticle(particle, 0.01, 0, 0, otherParticle)
-      UpdateParticle(particle, 0.01, 0, 0, otherParticle, True)
+        UpdateParticle(particle, dt, otherParticle)
     pygame.draw.circle(screen, white, (int(particle.x), int(particle.y)), particle.radius)
-    #screen.set_at((int(particle.x), int(particle.y)), white)
 
-    """
-    for lastPos in particle.GetLastPositions():
-      if lastPos != ".":
-        screen.set_at((int(lastPos[0]),int(lastPos[1])), white)
-    """
+    
+    particleText = font.render(f"{i+1}: {particle.GetData()}", True, white)
+    particleTextRect = particleText.get_rect()
+    particleTextRect.topleft = (0,0 + 20*i)
+    screen.blit(particleText, particleTextRect)
 
   pygame.display.flip()
 
