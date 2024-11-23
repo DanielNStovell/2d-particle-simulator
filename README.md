@@ -4,3 +4,5 @@ A small application that allows the user to place particles that interact with e
 ## Description
 I originally made this program because I thought it would look cool to visualize the movement of particles when they start interacting with each other.
 
+To start of, we need to create a 'blueprint' for the particles
+

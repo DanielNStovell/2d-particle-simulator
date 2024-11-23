@@ -11,10 +11,10 @@ white = (255, 255, 255)
 
 class PARTICLE(object):
   def __init__(self, x, y, vx, vy, mass, radius):
-    self.x = x
-    self.y = y
-    self.vx = vx
-    self.vy = vy
+    self.x = x # x position
+    self.y = y # y position
+    self.vx = vx # x velocity
+    self.vy = vy # y velocity
     self.mass = mass
     self.radius = radius
 
@@ -23,18 +23,26 @@ class PARTICLE(object):
     self.y += self.vy * dt
 
   def UpdateVelocity(self, dt, other):
-
     XFORCES = []
     YFORCES = []
 
+    # Pythagorean theorem to find the distance between the particles
     r = ((self.x - other.x)**2 + (self.y - other.y)**2)**0.5
+
+    # Prevents dividing by 0
     if r == 0:
-      r = 1e-1
-    G = 10
-    epsilon = 3
+      r = 1e-3 # 0.001
+
+    G = 10 # Graviational Constant
+    epsilon = 3 # Prevents small devisors
+
+    # Newton's Law of Univeral Gravitation
     F = G * (self.mass * other.mass) / (r**2 + epsilon**2)
+
+    # Using trigonometry to split the force for x and y
     F_x = F * ((other.x - self.x)/r)
     F_y = F * ((other.y - self.y)/r)
+
     XFORCES.append(F_x)
     YFORCES.append(F_y)
 
@@ -50,19 +58,24 @@ class PARTICLE(object):
     F_xtotal = sum(XFORCES)
     F_ytotal = sum(YFORCES)
 
+    # Newton's Second Law of Motion
     ax = F_xtotal/self.mass
     ay = F_ytotal/self.mass
 
     self.vx += ax * dt
     self.vy += ay * dt 
 
-  def CheckBoundary(self, xr, xl, yu, yd):
-    if xl > xr or yd > yu:
+  def CheckBoundary(self, rightWall, leftWall, topWall, bottomWall):
+    # Checks if the arrangement of each walls are correct
+    if leftWall > rightWall or bottomWall > topWall:
       return "Not valid boundaries"
 
-    if self.x > xr or self.x < xl:
+    # Colliding with a vertical wall causes the x velocity to negate
+    if self.x > rightWall or self.x < leftWall:
       self.vx = -self.vx 
-    if self.y > yu or self.y < yd:
+
+    # Colliding with a horizontal wall causes the y velocity to negate
+    if self.y > topWall or self.y < bottomWall:
       self.vy = -self.vy 
 
   def GetData(self):
