@@ -70,11 +70,11 @@ class PARTICLE(object):
     if leftWall > rightWall or bottomWall > topWall:
       return "Not valid boundaries"
 
-    # Colliding with a vertical wall causes the x velocity to negate
+    # Colliding with a vertical wall causes the x velocity to reverse
     if self.x > rightWall or self.x < leftWall:
       self.vx = -self.vx 
 
-    # Colliding with a horizontal wall causes the y velocity to negate
+    # Colliding with a horizontal wall causes the y velocity to reverse
     if self.y > topWall or self.y < bottomWall:
       self.vy = -self.vy 
 
