@@ -5,7 +5,7 @@ pygame.init()
 
 width, height = 1300, 700
 screen = pygame.display.set_mode((width, height))
-pygame.display.set_caption("Particle")
+pygame.display.set_caption("Particle Attraction")
 
 black = (0, 0, 0)
 white = (255, 255, 255)
