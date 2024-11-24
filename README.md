@@ -1,6 +1,8 @@
 # Particle-Attraction
 A small program that allows the user to place particles that interact with each other. 
 
+![](https://raw.githubusercontent.com/DanielNStovell/particle-attraction/refs/heads/main/particle%20attraction%20Demo.gif)
+
 ## Description
 I originally made this program because I thought it would look cool to visualize the movement of particles when they start interacting with each other.
 
